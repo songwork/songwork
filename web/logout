@@ -1,0 +1,6 @@
+<?php
+require 'songwork-init.php';
+Person::destroy_auth();
+$qq->flash('logged out');
+$qq->redirect('');
+?>

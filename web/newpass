@@ -1,0 +1,7 @@
+<?php
+require 'songwork-init.php';
+$qv['pagetitle'] = 'NEW PASSWORD';
+$qq->show('head');
+$qq->show('newpass');
+$qq->show('foot');
+?>

@@ -1,0 +1,66 @@
+<?php
+require 'auth-admin.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	switch($_POST['action'])
+		{
+		case 'ADD':
+			$ur = Person::get_by_email($_POST['email']);
+			if($ur === false)
+				{
+				$qq->flash('Email not found. Email songwork@songwork.com with details.');
+				$qq->redirect('a/teacher');
+				}
+			else
+				{
+				$t = new Teacher(false);
+				$new_id = $t->add(array('person_id' => $ur->id));
+				$qq->redirect('a/teacher/' . $new_id);
+				}
+			break;
+		case 'UPDATE':  # needs to be to /a/teacher/123
+			$id = intval($server['params'][0]);
+			$t = new Teacher($id);
+			$t->set($_POST);
+			$qq->flash('updated');
+			$qq->redirect('a/teacher/' . $id);
+			break;
+		case 'DELETE':
+			$id = intval($server['params'][0]);
+			$t = new Teacher($id);
+			if(count($t->documents() == 0) && $id !== 1)
+				{
+				$t->kill();
+				$qq->flash('deleted ' . $t->name());
+				}
+			break;
+		}
+	$qq->redirect('a/teacher');
+	}
+
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$t = new Teacher($server['params'][0]);
+	if($t->failed()) { $qq->redirect('teacher'); }
+	$qv['pagetitle'] = $t->name();
+	$qq->show('head');
+	$qv['t'] = $t;
+	$qv['documents'] = $t->documents();
+	$qq->show('a-teacher');
+	if(count($qv['documents']) == 0)
+		{
+		$qq->show('a-teacher-kill-form');
+		}
+	}
+else
+	{
+	$qv['pagetitle'] = 'Teachers';
+	$qq->show('head');
+	$qv['teachers'] = Teacher::all();
+	$qq->show('a-teachers');
+	$qq->show('a-teacher-add-form');
+	}
+
+$qq->show('foot');
+?>

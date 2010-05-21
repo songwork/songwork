@@ -1,0 +1,22 @@
+<?php
+require 'songwork-init.php';
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$t = new Teacher($server['params'][0]);
+	if($t->failed()) { $qq->redirect('teacher'); }
+	if($t->available() !== 't') { $qq->redirect('teacher'); }
+	$qv['pagetitle'] = 'CONSULTATION with ' . $t->name();
+	$qq->show('head');
+	$qv['t'] = $t;
+	$qq->show('consultation-request-form');
+	}
+else
+	{
+	$qv['pagetitle'] = 'Teachers Available';
+	$qq->show('head');
+	$qv['teachers'] = Teacher::consultable();
+	$qq->show('consultable');
+	}
+
+$qq->show('foot');
+?>

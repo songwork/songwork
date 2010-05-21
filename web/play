@@ -1,0 +1,14 @@
+<?php
+require 'songwork-init.php';
+$d = new Document($server['params'][0]);
+if($d->failed)  # or not allowed
+	{
+	$qq->redirect('document');
+	}
+$qv['pagetitle'] = $d->name();
+$qq->show('head');
+$qv['d'] = $d;
+$qq->show('stream');
+$qq->show('download-link');
+$qq->show('foot');
+?>

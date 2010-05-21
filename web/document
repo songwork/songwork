@@ -1,0 +1,46 @@
+<?php
+require 'songwork-init.php';
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$d = new Document($server['params'][0]);
+	if($d->failed()) { $qq->redirect('document'); }
+	$qv['d'] = $d;
+	# NOT ACTIVE?  DON'T SHOW
+	if($d->status() !== 'ACTIVE')
+		{
+		$qv['pagetitle'] = 'inactive';
+		$qq->show('head');
+		$qq->show('document-inactive');
+		}
+	else
+		{
+		if($student && $student->paid_for_document($d->id))
+			{
+			$qq->redirect('s/document/' . $d->id);
+			}
+		$qv['pagetitle'] = $d->name();
+		$qq->show('head');
+		if($p)
+			{
+			$qv['paypal_button'] = $d->paypal_button($currency, array('person' => $p, 'student' => $student, 'teacher' => $teacher));
+			}
+		$qq->show('document');
+		if(strlen($d->youtube()))
+			{
+			$qv['youtube'] = $d->youtube();
+			$qq->show('preview-header');
+			$qq->show('youtube');
+			}
+		}
+	}
+else
+	{
+	$qv['pagetitle'] = 'Videos';
+	$qq->show('head');
+	$qv['documents'] = Document::active();
+	$qv['tags'] = Tag::popular();
+	$qq->show('documents');
+	}
+
+$qq->show('foot');
+?>

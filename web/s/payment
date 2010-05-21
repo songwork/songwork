@@ -1,0 +1,23 @@
+<?php
+require 'auth-student.php';
+
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$y = new Payment($server['params'][0]);
+	if($y->failed()) { $qq->redirect('s/payment'); }
+	if($y->student_id() != $student->id) { $qq->redirect('s/payment'); }
+	$qv['pagetitle'] = 'PAYMENT ' . $y->id;
+	$qq->show('head');
+	$qv['y'] = $y;
+	$qq->show('s-payment');
+	}
+else
+	{
+	$qv['pagetitle'] = 'Your Payments';
+	$qq->show('head');
+	$qv['payments'] = $student->payments();
+	$qq->show('s-payments');
+	}
+
+$qq->show('foot');
+?>

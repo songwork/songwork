@@ -1,0 +1,31 @@
+<?php
+require 'auth-teacher.php';
+
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$s = new Student($server['params'][0]);
+	# if this student has not bought this teacher's document, not allowed to see. redirect.
+	if($s->failed() || $teacher->has_student_id($s->id) === false) { $qq->redirect('t/student'); }
+	# teachers are only allowed to update this one field of students
+	if(isset($_POST['our_notes']) && strlen($_POST['our_notes']))
+		{
+		$s->set(array('our_notes' => $_POST['our_notes']));
+		$qq->flash('updated');
+		$qq->redirect('t/student/' . $s->id);
+		}
+	$qv['pagetitle'] = $s->name();
+	$qq->show('head');
+	$qv['s'] = $s;
+	$qv['payments'] = $s->payments();
+	$qq->show('t-student');
+	}
+else
+	{
+	$qv['pagetitle'] = 'Your Students';
+	$qq->show('head');
+	$qv['students'] = $teacher->students();
+	$qq->show('t-students');
+	}
+
+$qq->show('foot');
+?>

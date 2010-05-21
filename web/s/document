@@ -1,0 +1,30 @@
+<?php
+require 'auth-student.php';
+# ONLY PAID STUDENT ACCESS TO DOCUMENT
+# get document ID from URL
+if(!isset($server['params'][0]) || !ctype_digit($server['params'][0]))
+	{
+	$qq->redirect('s/home');
+	}
+# get document
+$d = new Document($server['params'][0]);
+if($d->failed())
+	{
+	$qq->redirect('s/home');
+	}
+# only student who has paid for this can continue
+if($student->paid_for_document($d->id) == false)
+	{
+	$qq->redirect('s/home');
+	}
+# APPROVED. SHOW IT
+$qv['pagetitle'] = $d->name();
+$qq->show('head');
+$qv['d'] = $d;
+$qv['payment'] = $d->payment_from_student($student->id);
+$qq->show('document-paid');
+$qv['download'] = true;
+$qq->show('stream');
+$qq->show('document-description');
+$qq->show('foot');
+?>

@@ -1,0 +1,85 @@
+<?php
+require 'songwork-init.php';
+# if logged in already, redirect to /s/ or /t/
+if($admin)
+	{
+	$qq->redirect('a/');
+	}
+elseif($teacher)
+	{
+	$qq->redirect('t/');
+	}
+elseif($p || $student)
+	{
+	$qq->redirect('s/');
+	}
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	# if no valid email, send back to /login
+	if(!isset($_POST['email']) || !is_valid_email_address($_POST['email']))
+		{
+		$qq->flash('Hmm... Check that email address again?');
+		$qq->redirect('login');
+		}
+	$timeout = time() + (60 * 60 * 24 * 365);   # 1 year
+	setcookie('email', $_POST['email'], $timeout, '/');
+	# email in database?
+	$pp = Person::get_by_email($_POST['email']);
+	if($pp === false)
+		{
+		# EMAIL NOT IN DATABASE - SEND TO SIGNUP
+		$qq->redirect('signup');
+		}
+	## THEY ARE IN THE DATABASE
+	# do they even have a password yet?
+	if(strlen($pp->hashpass()) == 0)
+		{
+		# THEY HAVE NEVER MADE A PASSWORD - email them a password-maker
+		$pp->email_newpass();
+		$qq->redirect('newpass');
+		}
+	else
+		{
+		# YES - THEY DO HAVE A PASSWORD ON FILE
+		# if no password submitted, send back to /login
+		if(!isset($_POST['password']) || !strlen($_POST['password']))
+			{
+			$qq->flash('Hmm... Check that password again?');
+			$qq->redirect('login');
+			}
+		$pp = Person::get_by_email_pass($_POST['email'], $_POST['password']);
+		# did email + password login work?
+		if($pp === false)
+			{
+			$qq->flash('Hmm... Check that password again?');
+			$qq->redirect('login');
+			}
+		else
+			{
+			## YAY! AUTHORIZED PERSON!  Remember with cookie, now.
+			$pp->set_auth();
+			if(Administrator::get_by_person($pp) !== false)
+				{
+				$qq->redirect('a/');
+				}
+			if(Teacher::get_by_person($pp) !== false)
+				{
+				$qq->redirect('t/');
+				}
+			if(Student::get_by_person($pp) !== false)
+				{
+				$qq->redirect('s/');
+				}
+			# authorized person, but neither teacher nor student yet. add to students, and send there
+			Student::addperson($pp);
+			$qq->redirect('s/');
+			}
+		}
+	}
+
+$qv['pagetitle'] = 'LOG IN';
+$qq->show('head');
+$qq->show('login');
+$qq->show('foot');
+?>

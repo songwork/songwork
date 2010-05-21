@@ -1,0 +1,29 @@
+<?php
+require 'auth-student.php';
+
+$qv['pagetitle'] = $student->name();
+$qq->show('head');
+$qq->show('s-home');
+$qv['documents'] = $student->paid_documents();
+if(count($qv['documents']))
+	{
+	$qq->show('paid-documents');
+	}
+else
+	{
+	$qq->show('documents-none-yet');
+	}
+
+print '<h3>Please update your info:</h3>';
+$qq->show('person-selfedit');
+
+if(count($qv['documents']))
+	{
+	$qv['payments'] = $student->payments();
+	$qq->show('s-payments');
+	}
+
+$qq->show('logout');
+
+$qq->show('foot');
+?>

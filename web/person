@@ -1,0 +1,40 @@
+<?php
+require 'auth-either.php';
+
+# right now ONLY used to UPDATE the PERSON info for the person who is logged in!
+if(isset($_POST['action']) && $_POST['action'] == 'UPDATE')
+	{
+	if(!isset($_POST['email']) || is_valid_email_address($_POST['email']) == false)
+		{
+		$qq->flash('Bad email address. Try again?');
+		}
+	elseif(!isset($_POST['name']) || trim($_POST['name']) == '')
+		{
+		$qq->flash('Need your name! Try again?');
+		}
+	else
+		{
+		# don't change password unless new one posted
+		if(isset($_POST['password']) && trim($_POST['password']) == '')
+			{
+			unset($_POST['password']);
+			}
+		$p->set($_POST);
+		$qq->flash('updated your info');
+		}
+	}
+
+if($teacher)
+	{
+	$qq->redirect('t/');
+	}
+elseif($student)
+	{
+	$qq->redirect('s/');
+	}
+elseif($admin)
+	{
+	$qq->redirect('a/');
+	}
+$qq->redirect('home');  #  shouldn't ever reach here
+?>

@@ -1,0 +1,16 @@
+<?php
+require 'auth-teacher.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	switch($_POST['action'])
+		{
+		case 'UPDATE':  # no need for ID, since they can only update themselves
+			$teacher->set($_POST);
+			$qq->flash('updated');
+			$qq->redirect('t/');
+			break;
+		}
+	$qq->redirect('t/');
+	}
+?>

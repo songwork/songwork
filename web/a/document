@@ -1,0 +1,142 @@
+<?php
+require 'auth-admin.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	if($_POST['action'] !== 'ADD')
+		{
+		$id = intval($server['params'][0]);
+		$d = new Document($id);
+		}
+	switch($_POST['action'])
+		{
+		case 'ADD':
+			$d = new Document(false);
+			$id = $d->add($_POST);
+			$d = new Document($id);
+			$d->add_teacher($_POST['teacher_id']);
+			break;
+		case 'UPDATE':
+			$_POST['bytes'] = intval($_POST['bytes']);
+			$d->set($_POST);
+			$qq->flash('updated');
+			break;
+		case 'DELETE':
+			$id = intval($server['params'][0]);
+			$d = new Document($id);
+			if($d->kill() === false)
+				{
+				$qq->flash('delete not allowed');
+				}
+			else
+				{
+				$qq->flash('deleted');
+				}
+			$qq->redirect('a/document');
+			break;
+		case 'ACTIVATE':
+			$d->activate();
+			$qq->flash('activated');
+			break;
+		case 'REMOVE':
+			$d->remove();
+			$qq->flash('removed');
+			break;
+		case 'REMOVETEACHER':
+			$d->remove_teacher($_POST['teacher_id']);
+			break;
+		case 'ADDTEACHER':
+			$d->add_teacher($_POST['teacher_id']);
+			break;
+		case 'REMOVETAG':
+			$d->remove_tag($_POST['tag_id']);
+			break;
+		case 'ADDTAG':
+			$d->add_tag($_POST['tag_id']);
+			break;
+		}
+	if(isset($id))
+		{
+		$qq->redirect('a/document/' . $id);
+		}
+	else
+		{
+		$qq->redirect('a/document');
+		}
+	}
+
+# for use in pulldown menu
+$allteachers = array('0' => '...');
+foreach(Teacher::all() as $t)
+	{
+	$allteachers[$t->id] = $t->name();
+	}
+$qv['allteachers'] = $allteachers;
+$alltags = array('0' => '...');
+foreach(Tag::all() as $g)
+	{
+	$alltags[$g->id] = $g->name();
+	}
+$qv['alltags'] = $alltags;
+$qv['pricecodes'] = PriceRef::pulldown_for_currency('USD');
+
+if(!isset($server['params'][0]))
+	{
+	$qv['pagetitle'] = 'DOCUMENTS';
+	$qv['documents'] = Document::all();
+	$qq->show('head');
+	$qq->show('a-documents');
+	$qq->show('document-add-form');
+	}
+else
+	{
+	$d = new Document($server['params'][0]);
+	$payments = $d->payments();
+	$qv['d'] = $d;
+	$qv['teachers'] = $d->teachers();
+	$qv['addteachers'] = $allteachers;
+	$qv['removeteachers'] = array();
+	foreach($qv['teachers'] as $xid => $x)
+		{
+		unset($qv['addteachers'][$xid]);
+		$qv['removeteachers'][$xid] = $x->name();
+		}
+	$qv['pagetitle'] = $d->name();
+	$qq->show('head');
+	$qq->show('a-document');
+	switch($d->status())
+		{
+		case 'ACTIVE':
+			$qq->show('a-document-remove');
+			break;
+		case 'WAITING':
+		case 'REMOVED':
+			$qq->show('a-document-activate');
+			break;
+		}
+	if(count($payments) == 0)
+		{
+		$qq->show('a-document-kill');
+		}
+	if(count($qv['teachers']) && strlen($d->name()))
+		{
+		print '<h3>Videos:</h3>';
+		$qv['filetype'] = 'download';
+		$qv['fileinfo'] = $d->file_found('download');
+		$qq->show('a-document-fileform');
+		$qv['filetype'] = 'stream';
+		$qv['fileinfo'] = $d->file_found('stream');
+		$qq->show('a-document-fileform');
+		}
+	$qv['tags'] = $d->tags();
+	$qv['addtags'] = $alltags;
+	$qv['removetags'] = array();
+	foreach($qv['tags'] as $xid => $x)
+		{
+		unset($qv['addtags'][$xid]);
+		$qv['removetags'][$xid] = $x->name();
+		}
+	$qq->show('a-document-tags');
+	}
+$qq->show('foot');
+?>

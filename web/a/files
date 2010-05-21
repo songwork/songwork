@@ -1,0 +1,7 @@
+<?php
+require 'auth-admin.php';
+$qv['pagetitle'] = 'FILE OVERVIEW';
+$qq->show('head');
+$qq->show('a-files');
+$qq->show('foot');
+?>

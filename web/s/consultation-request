@@ -1,0 +1,26 @@
+<?php
+require 'auth-student.php';
+
+# POST = add a consultation request
+if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$t = new Teacher($server['params'][0]);
+	if($t->failed() || $t->available() !== 't')
+		{
+		$qq->redirect('consultation');
+		}
+	else
+		{
+		$set = array('student_id' => $student->id, 'teacher_id' => $t->id, 'created_at' => date('Y-m-d'), 'student_notes' => $_POST['notes']);
+		$cr = new ConsultationRequest(false);
+		$cr->add($set);
+		$qq->redirect('s/consultation-request');
+		}
+	}
+
+# GET = thanks!
+$qv['pagetitle'] = 'Consultation Requested';
+$qq->show('head');
+$qq->show('s-consultation-requested');
+$qq->show('foot');
+?>

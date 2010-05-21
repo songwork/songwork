@@ -1,0 +1,7 @@
+<?php
+require 'songwork-init.php';
+$qv['pagetitle'] = 'About';
+$qq->show('head');
+$qq->show('about');
+$qq->show('foot');
+?>

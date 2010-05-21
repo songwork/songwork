@@ -1,0 +1,22 @@
+<?php
+require 'songwork-init.php';
+if($student)
+	{
+	$qq->redirect('s/');
+	}
+elseif($teacher)
+	{
+	$qq->redirect('t/');
+	}
+elseif($admin)
+	{
+	$qq->redirect('a/');
+	}
+$qv['pagetitle'] = 'SongWork';
+$qq->show('head');
+$qq->show('home');
+$qq->show('signupform');
+# $qq->show('examplevids');
+# $qq->show('benefits');
+$qq->show('foot');
+?>

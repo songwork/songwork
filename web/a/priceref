@@ -1,0 +1,35 @@
+<?php
+require 'auth-admin.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	switch($_POST['action'])
+		{
+		case 'update':  # needs to be to /priceref/123
+			$id = intval($server['params'][0]);
+			$x = new PriceRef($id);
+			$x->set($_POST);
+			$qq->flash('updated');
+			$qq->redirect('a/priceref');
+			break;
+		case 'add':
+			if(PriceRef::add_code_usd($_POST['code'], $_POST['millicents']) === true)
+				{
+				$qq->flash('added');
+				}
+			else
+				{
+				$qq->flash('failed');
+				}
+			$qq->redirect('a/priceref');
+			break;
+		}
+	}
+
+$qv['pagetitle'] = 'PRICE REFERENCES';
+$qq->show('head');
+$qv['pricerefs'] = PriceRef::all();
+$qv['currencies'] = PriceRef::currencies();
+$qq->show('a-priceref');
+$qq->show('foot');
+?>

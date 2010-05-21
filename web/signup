@@ -1,0 +1,60 @@
+<?php
+require 'songwork-init.php';
+# if logged in already, redirect to /s/ or /t/
+if($teacher)
+	{
+	$qq->redirect('t/');
+	}
+elseif($p || $student)
+	{
+	$qq->redirect('s/');
+	}
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	# if no valid email, send back to /signup
+	if(!isset($_POST['email']) || !is_valid_email_address($_POST['email']))
+		{
+		$qq->flash('Hmm... Check that email address again?');
+		$qq->redirect('signup');
+		}
+	# no name, send back to /signup
+	if(!isset($_POST['name']) || strlen($_POST['name']) < 2)
+		{
+		$timeout = time() + (60 * 60 * 24 * 365);   # 1 year
+		setcookie('email', $_POST['email'], $timeout, '/');
+		$qq->flash('... and your name is?');
+		$qq->redirect('signup');
+		}
+	# email in database?
+	$pp = Person::get_by_email($_POST['email']);
+	if($pp === false)
+		{
+		# EMAIL NOT IN DATABASE - ADD THEM & email newpass
+		$pp = new Person(Person::add2($_POST['email'], $_POST['name']));
+		$pp->set_welcome_cookie();
+		Student::addperson($pp);
+		$pp->email_newpass();
+		$qq->redirect('newpass');
+		}
+	## THEY ARE IN THE DATABASE ALREADY - add as student
+	$pp->set_welcome_cookie();
+	Student::addperson($pp);
+	# do they even have a password yet?
+	if(strlen($pp->hashpass()) == 0)
+		{
+		# THEY HAVE NEVER MADE A PASSWORD - email them a password-maker
+		$pp->email_newpass();
+		$qq->redirect('newpass');
+		}
+	# YES - THEY DO HAVE A PASSWORD ON FILE - send to /login
+	$qq->flash('I think you do have a password on file somewhere. Try again?');
+	$qq->redirect('login');
+	}
+
+$qv['pagetitle'] = 'SIGN UP';
+$qq->show('head');
+$qq->show('signupintro');
+$qq->show('signupform');
+$qq->show('foot');
+?>

@@ -1,0 +1,62 @@
+<?php
+/* NOTE: Two completely different scripts here in one file.
+** POST = IPN LISTENER = all messages from paypal.com server-to-server. "authorizations, FraudManagement actions, refunds, disputes, chargebacks" Log it all and act on what's received.
+PayPal suggests: "Trigger order fulfillment or enable media downloads when a check clears or a payment is made. Update accounting records"
+"IPN should not be considered a real-time service. Your checkout flow should not wait on an IPN message before it is allowed to complete."
+- Verify that you are the intended recipient of the IPN message by checking the email address in the message; this handlesa situation where another merchant could accidentally or intentionallyattempt to use your listener.
+- Avoid duplicate IPN messages. Check that you have not already processed the transaction identified by the transaction ID returned in the IPN message. You may need to store transaction IDs returnedby IPN messages in a file or database so that you can check for duplicates.
+- If the transaction ID sent by PayPal is a duplicate, you shouldnot process it again.
+- make sure that the transaction’s payment status is “completed” before enabling shipment of merchandise or allowing the download of digital media.
+- Verify that the payment amount actually matches what you intend to charge.
+https://cms.paypal.com/us/cgi-bin/?cmd=_render-content&content_ID=developer/e_howto_admin_IPNIntro
+*/
+require 'songwork-init.php';
+
+# POST only happens from PayPal's servers - NOT THE BROWSER/CLIENT! - so no setting cookies, etc
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	if(PayPal::ipn_verified())
+		{
+		$ptx_id = PayPal::logit();
+		if(true) # TODO: if it's a payment (it might not be...)
+			{
+			$payment_id = Payment::create_from_pptxn($ptx_id);
+			}
+		}
+	}
+else   # GET uris: what PayPal sends the customer to after going through their site
+	{
+	# switch on /paypal/*
+	$x2 = (isset($server['params'][0])) ? $server['params'][0] : '';
+	switch($x2)
+		{
+		case 'cancel':
+			$qv['pagetitle'] = 'Cancel';
+			$qq->show('head');
+			$qq->show('paypal-cancel');
+			$qq->show('foot');
+			break;
+		# /paypal/thanks?tx=3D289920DU410754D&st=Completed&amt=1.50&cc=EUR&cm=&item_number=3
+		case 'thanks':
+			$qv['pagetitle'] = 'Thanks!';
+			$qq->show('head');
+			$qq->show('paypal-thanks');
+			$qq->show('foot');
+			break;
+		# default = log and redirect!  should be no regular GET to /paypal
+		default:
+			$log = date('Y-m-d H:i:s') . "\n";
+			foreach($_COOKIE as $k => $v)
+				{
+				$log .= "$k\t=\t$v\n";
+				}
+			foreach($_SERVER as $k => $v)
+				{
+				$log .= "$k\t=\t$v\n";
+				}
+			file_put_contents('/tmp/paypal-BAD-GET.log', $log . "\n\n", FILE_APPEND);
+			$qq->redirect('');
+			break;
+		}
+	}
+?>

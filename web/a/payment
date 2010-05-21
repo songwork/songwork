@@ -1,0 +1,37 @@
+<?php
+require 'auth-admin.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	switch($_POST['action'])
+		{
+		case 'UPDATE':
+			$id = intval($server['params'][0]);
+			$y = new Payment($id);
+			$y->set($_POST);
+			$qq->flash('updated');
+			$qq->redirect('a/payment/' . $id);
+			break;
+		}
+	$qq->redirect('a/payment');
+	}
+
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$y = new Payment($server['params'][0]);
+	if($y->failed()) { $qq->redirect('a/payment'); }
+	$qv['pagetitle'] = 'PAYMENT ' . $y->id;
+	$qq->show('head');
+	$qv['y'] = $y;
+	$qq->show('a-payment');
+	}
+else
+	{
+	$qv['pagetitle'] = 'Payments';
+	$qq->show('head');
+	$qv['payments'] = Payment::all();
+	$qq->show('a-payments');
+	}
+
+$qq->show('foot');
+?>

@@ -1,0 +1,22 @@
+<?php
+require 'auth-teacher.php';
+
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$y = new Payment($server['params'][0]);
+	if($y->failed() || $teacher->has_payment_id($y->id) === false) { $qq->redirect('t/payment'); }
+	$qv['pagetitle'] = sprintf('Payment #' . $y->id);
+	$qq->show('head');
+	$qv['y'] = $y;
+	$qq->show('t-payment');
+	}
+else
+	{
+	$qv['pagetitle'] = 'Your Payments';
+	$qq->show('head');
+	$qv['payments'] = $teacher->incoming_payments();
+	$qq->show('t-payments');
+	}
+
+$qq->show('foot');
+?>

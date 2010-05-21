@@ -1,0 +1,220 @@
+/* SITE-WIDE */
+* {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+/* WARM ORANGE COLOR SCHEME:  (hue=23)
+#ff6000;
+#ffb080;
+#803000;
+#d95200;
+#bf6630;
+#cc4d00;
+#205b80;  = blue, opposite
+*/
+html {
+	background-color: #803000;
+	background: url(/css/redwood2.jpg);
+	color: #000;
+	text-align: center;
+}
+@font-face {
+	font-family: 'WCManoNegraBtaRegular';
+	src: url('WCManoNegraBta-webfont.eot');
+	src: local('☺'), url('WCManoNegraBta-webfont.woff') format('woff'), url('WCManoNegraBta-webfont.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+@font-face {
+	font-family: 'WCManoNegraBtaBold';
+	src: url('WCManoNegraBoldBta-webfont.eot');
+	src: local('☺'), url('WCManoNegraBoldBta-webfont.woff') format('woff'), url('WCManoNegraBoldBta-webfont.ttf') format('truetype');
+	font-weight: normal;
+	font-style: normal;
+}
+
+body, textarea {
+	font-family: Optima, "Trebuchet MS", "Lucida Sans Unicode", Tahoma, sans-serif;
+}
+#container {
+	margin: 4px auto;
+	border: 2px solid #000;
+	background-color: #fff;
+	width: 800px;
+	position: relative;
+}
+#header {
+	background-color: #bf6630;
+}
+#content {
+	text-align: left;
+	margin: 1em;
+}
+#content p {
+	line-height: 1.5em;
+	margin: 0.5em 2em 0.5em 0.5em;
+}
+li {
+	margin-left: 1em;
+}
+h2 {
+	font-size: 2.5em;
+}
+h3 {
+	font-size: 2em;
+	margin-top: 0.5em;
+}
+h4, .big {
+	font-size: 1.4em;
+}
+a, a:visited {
+	color: #205b80;
+}
+a:hover, input:focus, textarea:focus, input:hover, #flash {
+	background-color: yellow;
+}
+.highlight {
+	background-color: #ff6000;
+}
+.highlight2 {
+	background-color: #bf6630;
+}
+.small, div#footer, div.sublabel {
+	font-size: 0.75em;
+	font-weight: normal;
+}
+table.vidlist td {
+	padding-top: 12px;
+}
+td, th {
+	padding-left: 2px;
+	padding-right: 0.5em;
+	border-bottom: 1px solid #ddd;
+	border-left: 1px solid #ddd;
+}
+input, textarea {
+	border: 1px solid #000;
+	padding: 1px;
+	margin-right: 1em;
+}
+input, textarea, select {
+	font-size: 1.2em;
+}
+input.submit, #logout {
+	float: right;
+	clear: both;
+	margin-top: 1em;
+}
+label {
+	margin-top: 1em;
+	font-weight: bold;
+	display: block;
+	font-size: 0.9em;
+}
+div.sublabel {
+	display: block;
+}
+fieldset {
+	background-color: #ff6000;
+	padding-left: 0.25em;
+}
+/* SECTION SPECIFIC */
+#navigation {
+	height: 72px;
+}
+#navigation h1 {
+	font-family: 'WCManoNegraBtaRegular';
+	font-size: 84px;  /* 72 */
+	margin: 0;
+	padding: 0;
+	font-weight: normal;
+	position: absolute;
+	top: -18px;
+	left: 0px;
+}
+#navigation h1 a, #navigation h1 a:hover {
+	color: #000;
+	text-decoration: none;
+	background: none;
+}
+#navigation p#slogan {
+	font-family: 'WCManoNegraBtaRegular';
+	font-size: 26px;  /* 28 */
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: 0px;
+	right: 4px;
+	color: #fff;
+}
+#navigation ul {
+	position: absolute;
+	top: 40px;
+	right: 4px;
+	font-size: 24px;
+}
+#navigation li {
+	display: inline;
+	list-style-type: none;
+	margin-left: 1em;
+}
+#navigation a {
+	color: #000;
+	text-decoration: none;
+}
+#footer {
+	margin-top: 8em;
+	color: #803000;
+}
+div#signupform form {
+	margin: 0 5em;
+	border: 2px solid #000;
+}
+div#signupform label {
+	font-weight: normal;
+	font-size: 1.5em;
+}
+div#signupform input {
+	font-size: 2em;
+	border-radius: 3px;
+}
+div.description {
+	margin: 1em 2em;
+}
+ul.documents li, ul.teachers li {
+	margin: 1em 0 2em 1em;
+	list-style-type: none;
+}
+ul.documents li h3, ul.teachers li h3 {
+	font-size: 1.5em;
+}
+div.videobox {
+	text-align: center;
+}
+.headshot {
+	float: right;
+	margin: 0 0 0.5em 1em;
+}
+/* PAGE SPECIFIC */
+#introtext h2 {
+	margin-top: -10px;
+	line-height: 1em;
+	font-size: 60px;
+	font-weight: normal;
+	text-align: center;
+}
+#introtext p {
+	font-size: 1.5em;
+	line-height: 1.3em;
+	margin: 1em 0;
+}
+/* WARM ORANGE COLOR SCHEME:  (hue=23)
+#ff6000;
+#ffb080;
+#803000;
+#d95200;
+#bf6630;
+#cc4d00;
+#205b80;  = blue, opposite
+*/

@@ -1,0 +1,318 @@
+(see README.html for formatted version)
+
+SONGWORK
+
+Songwriting instruction from hit songwriters. Right now that's just selling videos, but eventually will be scheduling private instruction, subscribing to access all videos, uploading songs for group feedback, and maybe even a contest.
+
+SCHEMA
+
+An *admin* person can add a new songwriting *teacher* to the system. A *student* can sign up on the site at any time. All of these people are using a person_id to reference the central “people” database for their name, email, password, etc.
+
+Teacher creates a *document*, which is usually a video but could be a PDF, Word, MP3, or anything else for sale. A document has a name, description, date, bytesize, type, price, and hidden server-side url/filename outside the webroot where it can be downloaded once paid.  It has an optional YouTube URL to give a little pre-purchase preview of it.
+
+A document can have multiple teachers. The teachers equally split the sale revenue from that document.
+
+Prices are done with a *priceref*: a simple letter-code (like “a”) that corresponds to a price in many currencies. It's done this way so people worldwide can ship and see prices rounded in their currency. For example: “a” corresponds to $10, €7.50, £6.50, and ¥900 - all about equal value. The customer chooses the currency, and that's exactly what we charge them. (Example: exactly ¥900, not the equivalent of $10 in yen.) I like this model a lot and will probably use it on many other projects.
+
+A document can have more than one *tag*. Right now tags are only created and assigned by admins or teachers, and used to ease browsing of the site.
+
+When a student buys a document, it creates a *payment*, referencing the student.id and document.id, and saving the details of that payment. This is what gives the student the ability to view or download the document.
+
+All incoming activity to our PayPal gateway is saved as a *paypaltxn* (/“txn” = transaction/) with all PayPal's info, referencing the payment.id and a boolean flag for whether that transaction is reconciled.
+
+SITE
+
+For students, songwork.com is to browse, buy, and watch videos, communicate with teachers, and edit their info.
+
+For teachers, songwork.com is to add or edit their documents, see accounting for their payments, give feedback to students, schedule consultations, and edit their info.
+
+For admins, songwork.com can see, add, or edit all info in the database - and see a list of payments due.
+
+The browsing of the Songwork documents does not require authentication.  But a student record will need to be created and authenticated for them if they buy. Authentication will be needed for all teacher and admin areas, and all student-account pages.
+
+New documents added by teachers are not active (“added_at”) by default.  They are added to the site by the admin, after verifying that everything is ready.
+
+Each of the three roles of browser-users have a subdirectory: /s/ for student, /t/ for teacher, /a/ for admin. When a person successfully logs in, they are sent to the appropriate subdirectory. This allows for uniformity of URLs, but with the appropriate views and permissions.
+
+The top-level URLs are for the REST API. Optionally: all the forms in the subdirectories can do all their POST/PUT/DELETE to the REST URLs in the top-level, so all of that functionality is not duplicated. *Tight permissions* on all, to ensure that teachers can only change their documents, students can only see/create their own info, and admins can change anything, but not (for example) delete a student who has payments.
+
+
+URLs
+
+/
+    home page describing Songwork
+/document
+    list of all active documents
+/document/2
+    full description of document ID# 2, including an embedded YouTube
+    preview if available
+/teacher
+    list of all teachers and their bio
+/teacher/2
+    bio and photo of teacher ID# 2, and a linked list of all that
+    teacher's documents ( + any future info)
+/login
+    GET: show log-in form, offer to reset password
+    POST: verify email+password, send to appropriate subsection if
+    successful
+/signup
+    just like /login but for new students
+/reset
+    reset password if URL info matches random info in database
+/a/ = ADMIN area
+    basic CRUD for document, files, priceref, student, tag, teacher, and
+    uploading files
+/t/ = TEACHER area
+    see/add/edit their documents, see list of payments
+/s/ = STUDENT area
+    see approved documents, edit info
+
+
+    REST API
+
+URI 	GET 	POST 	PUT 	DELETE
+/person/2 	person info 	. 	update person 	.
+/student 	list all students 	person_id to create new student 	. 	.
+/student/2 	student info 	. 	update student 	delete student
+/student/2/documents 	student's paid documents 	. 	. 	.
+/teacher 	list all teachers 	person_id to create new teacher 	. 	.
+/teacher/2 	teacher info, list of documents 	. 	update teacher 	delete
+teacher
+/teacher/2/payments 	list of payments for teacher's documents 	. 	. 	.
+/document 	list all documents 	name (+info) to create new document 	. 	.
+/document/2 	document info, including tags, teachers 	. 	update
+document 	delete document
+/priceref 	list all pricerefs 	code, currency, millicents to create new
+priceref 	. 	.
+/priceref/x 	list pricerefs with code x 	. 	. 	.
+/priceref/2 	priceref info 	. 	update priceref 	delete priceref
+/payment 	list all payments 	student_id, document_id, currency,
+millicents, details to create new payment 	. 	.
+/payment/2 	payment info 	. 	update payment 	delete payment
+/tag 	list all tags 	name to create new tag 	. 	.
+/tag/2 	tag and list of all its documents 	. 	update tag 	delete tag
+/paypaltxn 	list all paypaltxns 	txn_id, txn_type, info to create new
+paypaltxn 	. 	.
+/paypaltxn/2 	paypaltxn info 	. 	update paypaltxn 	delete paypaltxn
+
+
+      REST Server
+
+do	details
+Administrator belongs_to Person	
+Administrator.name Administrator.email come from Person	
+Administrator::get_by_person(person_id) gets Administrator	
+Student belongs_to Person	
+Student.name Student.email come from Person	
+Student::get_by_person(person_id) gets Student	
+Student has_many :payments	
+Student has_many :paid_documents	"SELECT * FROM documents WHERE id IN
+(SELECT DISTINCT(document_id) FROM payments WHERE student_id=%d AND
+document_id IS NOT NULL) ORDER BY id DESC"
+Student.paid_for_document?($document_id)	boolean: has this student paid
+for this document? used for validating if they are trying to view/download
+Student.from_paypal($postfields)	get OR MAKE new student (& therefore
+Person) from PayPal posts: only used if someone buys something but isn't
+logged in as a student already.
+uses payer_email then first_name + ' ' + last_name. checks
+Person:get_by_email and adds if none
+Student:addperson($p)	creates a new student from this Person object/id
+Teacher belongs_to Person	
+Teacher has_and_belongs_to_many :documents	
+Teacher.students	based on payments for that teacher's documents:
+"SELECT * FROM students WHERE id IN (SELECT DISTINCT student_id FROM
+payments WHERE document_id IN (SELECT document_id FROM
+documents_teachers WHERE teacher_id=%d"))"
+Teacher.has_student(:student_id)	"SELECT id FROM payments WHERE
+student_id=%d AND document_id IN (SELECT document_id FROM
+documents_teachers WHERE teacher_id=%d) LIMIT 1"
+Teacher.name Teacher.email come from Person	
+Teacher::get_by_person(person_id) gets Teacher	
+Teacher.kill validates before deleting	can't kill if teacher has
+documents: SELECT * FROM documents_teachers WHERE teacher_id=%d
+Teacher.incoming_payments()	"SELECT * FROM payments WHERE document_id IN
+(SELECT document_id FROM documents_teachers WHERE teacher_id=%d) ORDER
+BY id DESC"
+Teacher.has_payment_id(:payment_id)	"SELECT id FROM payments WHERE
+id=:payment_id AND document_id IN (SELECT document_id FROM
+documents_teachers WHERE teacher_id=%d)")
+Document validations	maxlength: ('name' => 127, 'mediatype' => 32, 'url'
+=> 127, 'youtube' => 16, 'pricecode' => 1, 'length' => 24)
+Document.kill validates before deleting	can't kill if someone's paid for
+it: "SELECT id FROM payments WHERE document_id=%d"
+cascade to teachers: "DELETE FROM documents_teachers WHERE document_id=%d"
+Document.add_teacher(:teacher_id) validations	make sure teacher_id
+exists. make sure it's not already in documents_teachers:
+"SELECT * FROM documents_teachers WHERE document_id=%d AND teacher_id=%d"
+All clear? "INSERT INTO documents_teachers (document_id, teacher_id)
+VALUES (%d, %d)"
+Document.remove_teacher(:teacher_id)	"DELETE FROM documents_teachers
+WHERE document_id=%d AND teacher_id=%d"
+Document has_and_belongs_to_many :teachers	
+Document.status is WAITING, ACTIVE, or REMOVED	case ('added_at' == '')?
+WAITING
+case ('removed_at' == '')? ACTIVE
+else 'REMOVED'
+Document.activate	sets 'added_at' = NOW(), 'removed_at' = NULL
+Document.remove	sets 'removed_at' = NOW()
+Document has_many :payments	
+Document.teachernames	string of Teacher.name joined by &
+example: "Steve Seskin & Pat Pattison" if 2 teachers. if just one:
+"Steve Seskin"
+Document.linked_teachernames as HTML (helper?)	same as teachernames with
+each named linked to href="/teacher/%d" ID and joined by &amp;
+Document:fullname	Document.teachernames + ': ' + Document.name
+Document:linked_fullname	Document.linked_teachernames + ': ' +
+href="/document/%d"> + Document.name . </a>
+Document.filename_for(ext)	'SONGWORK-' + preg_replace('/[^a-zA-Z0-9]/',
+'', teachernames) + '-' + preg_replace('/[^a-zA-Z0-9]/', '', name) +
+strtolower($ext)
+Document.showsize	translates bytes into kb mb or gb. or '---' if 0 bytes.
+Document.download_relative_uri	sprintf('/%d/%s', id, url)
+Document.file_found(:type = stream||download)	return FALSE or
+Video::fullpath(:type, 'url')
+Document.price_in(:currency)	return
+PriceRef::money_for_code_currency('pricecode', :currency)
+Document.paypal_button(:currency)	returns encrypted PayPal button in HTML
+Document::active	"SELECT * FROM documents WHERE added_at IS NOT NULL and
+removed_at IS NULL ORDER BY id DESC"
+Document::waiting	"SELECT * FROM documents WHERE added_at IS NULL ORDER
+BY id ASC"
+Document::removed	"SELECT * FROM documents WHERE removed_at IS NOT NULL
+ORDER BY id DESC"
+Payment belongs_to :student	
+Payment belongs_to :document	
+Payment.money returns Money	
+Payment.create_from_pptxn($pptxn_id)	Open to suggestions on a better way
+to do this: get saved paypaltxn from database, and if it doesn't have
+payment_id already, parse its info to get all into to make new Payment,
+then update paypaltxn with new payment_id
+PayPalTxn belongs_to :payment	(or nil if none yet)
+PayPalTxn.reconciled?	boolean: true if reconciled =='t'
+PayPalTxn.reconcile	update to set reconciled='t'
+PayPalTxn.infohash	key=>value hash from info textbox
+PayPalTxn.customhash	take "custom = PERSON_ID=21534 STUDENT_ID=53
+TEACHER_ID=false" string, parse into k=>v array (keys lowercased, values
+as false or integer)
+PayPalTxn.money	get info['mc_currency'] and info['mc_gross'] (from
+.infohash) and return Money object
+PayPalTxn.student_id	get or create a student_id from the info in the
+PayPalTxn. return FALSE if unable
+first check customhash for student_id, then check customhash for
+person_id (check students for person_id) and create new student if not found
+if none of that worked, search Persons for payer_email, and if found,
+insert new student using that person_id. lastly, return false.
+PayPalTxn:for_payment_id(:id)	"SELECT * FROM paypaltxns WHERE
+payment_id=%d ORDER BY id ASC"
+PayPalTxn:without_payment_id	"SELECT * FROM paypaltxns WHERE payment_id
+IS NULL ORDER BY id ASC"
+PayPalTxn:not_reconciled	"SELECT * FROM paypaltxns WHERE reconciled='f'
+ORDER BY id ASC"
+Priceref validations	'code' => 1, 'currency' => 3 and is valid currency
+code. combination is unique.
+Priceref.money returns Money	
+Priceref.currencies	array of unique currencies in this table, sorted.
+used for option-select menu when adding new ones.
+Priceref:add_code_usd($code, $millicents)	smart-ass way of adding a new
+priceref code: just give me letter and USD millicents, I'll fill in all
+the currency used currencies with that exact amount, then you can tweak
+it later to round it out
+Priceref:prices_for_code($code)	array of Priceref objects with this code:
+Priceref:money_for_code_currency($code, $currency)	"SELECT millicents
+FROM pricerefs WHERE code='$code' AND currency='$currency' LIMIT 1"
+default to USD if not found. return Money
+Priceref:pulldown_for_currency($currency)	array of code => showmoney,
+for use in pulldown choice of what priceref to give something
+"SELECT code, millicents FROM pricerefs WHERE currency='$currency' ORDER
+BY millicents ASC"
+Video:basedirs = places where videos might be
+array('/var/www/songwork-video/', '/home/songwork/Videos/songwork/',
+'/Users/songwork/Sites/songwork-video/')
+Video:basedir = where videos are	loops through possible directories and
+returns first is_dir? true
+Video:fullpath($type, $filename)	type must be stream or download
+example return:
+"/var/www/songwork-video/stream/SONGWORK-SteveSeskin-SomeLessonName.mov"
+Video:download($filename)	sends all HTTP headers and passthrough binary file
+Video:stream($filename)	sends just HTTP type header and passthrough
+binary file
+REST site authenticates using email + password from shared People database	
+After authenticating, knows whether visitor is Teacher, Student, or Admin	
+Currency defaults to USD, but can be changed with cookie.	
+REST server defaults to “Forbidden” status/action unless authenticated
+as described below.	
+REST: /person/:id GET	if same as authenticated person, show full info
+if a Songwork student, allow teacher or admin to see full info
+REST: /person/:id PUT	if same as authenticated person, allow update
+if a Songwork student or teacher, and user is an admin, allow update
+REST: /student GET	if user is a teacher or admin, show list of all
+students: id, person_id, name, email
+REST: /student POST	if user is a teacher or admin, allow post of
+person_id to create new student, redirect to new page
+REST: /student/:id GET	if same as authenticated student, show full info
+minus “our_notes”
+if user is a teacher or admin, show full info
+REST: /student/:id PUT	if this-student, teacher, or admin, allow update
+REST: /student/:id DELETE	if this-student, teacher, or admin, allow
+delete. (model won't allow if student has purchases.)
+REST: /student/:id/documents GET	if this-student, teacher, or admin,
+return list of documents id, name, and payments.created_at as payment_date
+REST: /teacher GET	public (no auth) - return list of teachers: id, name,
+and profile
+REST: /teacher POST	if admin, allow post of person_id to create new
+teacher, redirect to new page
+REST: /teacher/:id GET	if teacher or admin, show all person info
+(email/address/etc), list of all documents
+public (no auth) - show teacher name, profile, and list of all active
+documents
+REST: /teacher/:id POST	if this-teacher or admin, allow update
+REST: /teacher/:id DELETE	if this-teacher or admin, allow delete. (model
+won't allow if teacher has documents.)
+REST: /teacher/:id/payments GET	if this-teacher or admin, list of
+payments for teacher's documents
+REST: /document GET	if admin or teacher, list of all documents
+public (no auth), list all active documents
+REST: /document POST	if admin or teacher, allow post of info to create
+new document, redirect to new page
+REST: /document/:id GET	if admin or teacher, view full info + its
+teachers, tags, pricerefs
+public (no auth), only if active, view full info + its teachers, tags,
+pricerefs
+REST: /document/:id POST	if admin or a teacher of this document, allow
+update. use this to set "removed_at" date instead of real DELETE.
+REST: /document/:id DELETE	if admin and document has no purchases, allow
+actual delete
+REST: /priceref GET	public (no auth) - list all pricerefs
+REST: /priceref POST	if admin, allow post code, currency, millicents to
+create new priceref
+REST: /priceref/:code [a-z] GET	public (no auth) - list all pricerefs
+with this code
+REST: /priceref/:id GET	public (no auth) - show this priceref
+REST: /priceref/:id PUT	if admin, allow update
+REST: /priceref/:id DELETE	if admin, allow delete
+REST: /payment GET	if admin, list all payments
+if teacher, list all payments for their documents
+if student, list all their payments
+REST: /payment POST	if admin, post student_id, document_id, currency,
+millicents, details to create new payment
+REST: /payment/:id GET	if admin, or this-student_id, or
+this-teacher's-document_id, show payment info
+REST: /payment/:id POST	if admin, allow update
+REST: /payment/:id DELETE	if admin, allow delete
+REST: /tag GET	public (no auth) - list all tags
+REST: /tag POST	if admin or teacher, allow post of name to create new tag
+REST: /tag/:id GET	public (no auth) - tag and all active documents with it
+REST: /tag/:id POST	if admin or teacher, allow post of document_id to
+add to documents_tags
+REST: /tag/:id PUT	if admin or teacher, allow update of tag
+REST: /tag/:id DELETE	if admin or teacher, allow delete of tag, removing
+it from all documents_tags
+REST: /tag/:id/:document_id DELETE	if admin or teacher, allow delete of
+this tag_id and document_id combination from documents_tags
+REST: /paypaltxn GET	if admin, list all paypaltxns
+REST: /paypaltxn POST	if admin, allow post of txn_id, txn_type, info to
+create new paypaltxn
+REST: /paypaltxn/:id GET	if admin, show details of paypaltxn
+REST: /paypaltxn/:id PUT	if admin, allow update of paypaltxn
+REST: /paypaltxn/:id DELETE	if admin, allow delete of paypaltxn
+

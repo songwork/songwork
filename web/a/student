@@ -1,0 +1,61 @@
+<?php
+require 'auth-admin.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	switch($_POST['action'])
+		{
+		case 'ADD':
+			$ur = Person::get_by_email($_POST['email']);
+			if($ur === false)
+				{
+				$qq->flash('Email not found. Email songwork@songwork.com with details.');
+				$qq->redirect('a/student');
+				}
+			else
+				{
+				$s = Student::get_by_person($ur);
+				if($s !== false)
+					{
+					$new_id = $s->id;
+					}
+				else
+					{
+					$s = new Student(false);
+					$new_id = $s->add(array('person_id' => $ur->id));
+					}
+				$qq->redirect('a/student/' . $new_id);
+				}
+			break;
+		case 'UPDATE':  # needs to be to /a/student/123
+			$id = intval($server['params'][0]);
+			$s = new Student($id);
+			$s->set($_POST);
+			$qq->flash('updated');
+			$qq->redirect('a/student/' . $id);
+			break;
+		}
+	$qq->redirect('a/student');
+	}
+
+if(isset($server['params'][0]) && ctype_digit($server['params'][0]))
+	{
+	$s = new Student($server['params'][0]);
+	if($s->failed()) { $qq->redirect('a/student'); }
+	$qv['pagetitle'] = $s->name();
+	$qq->show('head');
+	$qv['s'] = $s;
+	$qv['payments'] = $s->payments();
+	$qq->show('a-student');
+	}
+else
+	{
+	$qv['pagetitle'] = 'Students';
+	$qq->show('head');
+	$qv['students'] = Student::all();
+	$qq->show('a-students');
+	$qq->show('a-student-add-form');
+	}
+
+$qq->show('foot');
+?>

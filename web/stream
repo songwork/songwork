@@ -1,0 +1,4 @@
+<?php
+require 'video-init.php';
+Video::stream($d->url());
+?>

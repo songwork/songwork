@@ -1,0 +1,34 @@
+<?php
+# use this same page (with slight domain-specific tweaks) on every domain possible
+require 'songwork-init.php';
+
+if(isset($_POST['password']) && strlen($_POST['password']))
+	{
+	# MUST be logged in with cookie by now to change the password!
+	$p = Person::get_by_cookie();
+	if($p === false)
+		{
+		$qq->redirect('');   #TODO: fail page?
+		}
+	$p->set(array('password' => $_POST['password']));
+	$qq->redirect('');    #TODO: success page!
+	}
+
+if(!isset($server['params'][0]) || !ctype_alnum($server['params'][0]) || strlen($server['params'][0]) != 8)
+	{
+	$qq->redirect('');   # TODO: fail page?
+	}
+$p = Person::get_by_newpass($server['params'][0]);
+if($p === false)
+	{
+	$qq->redirect('');   # TODO: fail page?
+	}
+
+### AUTHORIZED! SET COOKIE, allowing them to change
+$p->set_auth();
+
+$qv['pagetitle'] = 'NEW PASSWORD';
+$qq->show('head');
+$qq->show('reset');
+$qq->show('foot');
+?>

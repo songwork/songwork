@@ -1,0 +1,30 @@
+<?php
+require 'auth-admin.php';
+if(!isset($server['params'][0]))
+	{
+	die('need id');
+	}
+$d = new Document($server['params'][0]);
+if($d->failed)
+	{
+	die('document failed');
+	}
+if(!isset($_FILES['userfile']))
+	{
+	die('no userfile uploaded?');
+	}
+
+$filetype = ($_POST['filetype'] == 'stream') ? 'stream' : 'download';
+
+# what to name the file. existing name if exists, or use created one
+$filename = ($d->url()) ? $d->url() : $d->filename_for('mov');
+
+# what path to put it, download or stream?
+$destination = Video::basedir() . $filetype . '/' . $filename;
+
+if(move_uploaded_file($_FILES['userfile']['tmp_name'], $destination))
+	{
+	$d->set(array('url' => $filename, 'bytes' => filesize($destination)));
+	}
+$qq->redirect('a/document/' . $d->id);
+?>

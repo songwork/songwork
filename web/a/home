@@ -1,0 +1,9 @@
+<?php
+require 'auth-admin.php';
+
+$qv['pagetitle'] = 'ADMIN';
+$qq->show('head');
+$qq->show('admin-home');
+$qq->show('logout');
+$qq->show('foot');
+?>

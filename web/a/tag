@@ -1,0 +1,49 @@
+<?php
+require 'auth-admin.php';
+
+if($_SERVER['REQUEST_METHOD'] == 'POST')
+	{
+	switch($_POST['action'])
+		{
+		case 'update':  # needs to be to /tag/123
+			$id = intval($server['params'][0]);
+			$x = new Tag($id);
+			$x->set($_POST);
+			$qq->flash('updated');
+			$qq->redirect('a/tag');
+			break;
+		case 'add':
+			$x = new Tag(false);
+			$x->add(array('name' => $_POST['name']));
+			$qq->redirect('a/tag');
+			break;
+		case 'remove':
+			$id = intval($server['params'][0]);
+			$x = new Tag($id);
+			$x->kill();
+			$qq->redirect('a/tag');
+			break;
+		}
+	}
+
+$qv['pagetitle'] = 'Tags';
+$qq->show('head');
+$qv['tags'] = Tag::all();
+$qq->show('a-tags');
+$qv['documents'] = Document::tagless();
+if(count($qv['documents']))
+	{
+	$qv['header'] = 'Tagless Documents (please tag them)';
+	$qq->show('a-doclist');
+	}
+foreach($qv['tags'] as $t)
+	{
+	$qv['documents'] = $t->documents();
+	if(count($qv['documents']))
+		{
+		$qv['header'] = 'With tag: ' . $t->name();
+		$qq->show('a-doclist');
+		}
+	}
+$qq->show('foot');
+?>

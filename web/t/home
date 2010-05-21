@@ -1,0 +1,12 @@
+<?php
+require 'auth-teacher.php';
+
+$qv['pagetitle'] = 'TEACHER HOME - ' . $p->name();
+$qq->show('head');
+
+$qq->show('t-home');
+$qq->show('t-info');
+$qq->show('logout');
+
+$qq->show('foot');
+?>
