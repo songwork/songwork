@@ -5,12 +5,9 @@ class PgDB
 	private $link;
 	private $result;
 	
-	function __construct($database, $user, $host=false, $pass=false)
+	function __construct($database, $user)
 		{
 		$connection_string = "dbname=$database user=$user";
-		if($host == false) { $host = 'pgdb'; }  # must be in /etc/hosts!
-		$connection_string .= " host=$host";
-		if($pass) { $connection_string .= " password=$pass"; }
 		$this->link = pg_connect($connection_string) or $this->nicedie(pg_last_error($this->link));
 		}
 
