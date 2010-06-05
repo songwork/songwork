@@ -1,0 +1,43 @@
+TO INSTALL THIS ON YOUR DEVELOPMENT MACHINE:
+
+You must be running Linux, BSD, or OS X.  No Windows.
+
+You must have installed Apache, PHP, Git, PostgreSQL, and "postgres-contrib" (to get the pgcrypto functions)
+For PHP, you'll need to install phpunit, php-pgsql, and a few more. (based on missing errors)
+
+This requires some modifications to Apache's main config:
+DefaultType application/x-httpd-php
+DirectoryIndex index.html home
+
+You have to make an entry in your /etc/hosts
+127.0.0.1  songwork.dev
+
+Get it from github:
+git clone http://github.com/songwork/songwork.git
+
+Then this in your Apache VirtualHosts:
+<VirtualHost *:80>
+  ServerName songwork.dev
+  DocumentRoot /your/path/to/songwork/web
+  php_value include_path /your/path/to/songwork/php
+</VirtualHost>
+
+PostgreSQL needs its pg_hba.conf set to: local all all trust
+Then 'createuser songwork' and make it a super-user so it can install the pgcrypto functions
+
+And finally, to run the phpunit tests, your php.ini for the PHP CLI must have these settings:
+include_path = ".:../php:/usr/share/pear" 
+
+To test your initial install, go to /test/ directory and run: sh regen-scratch.sh
+
+When that works, run: sh alltest.sh
+
+When that works, load the fixtures.pgsql into the main database like this:
+pgsql -U songwork -d songwork -f fixtures.pgsql
+
+Then go to http://songwork.dev/ in your browser.
+
+Click around and try logging in as different users, or creating a new user, to make sure it works.
+
+Feel free to ask me any questions.
+
