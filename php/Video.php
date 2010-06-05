@@ -43,22 +43,17 @@ class Video
 		header('Content-Length: ' . filesize($fullpath));
 		header('Content-Disposition: inline; filename=' . $filename);
 		header("Content-Transfer-Encoding: binary\n");
-		$fp = fopen($fullpath, 'rb');
-		fpassthru($fp);
-		fclose($fp);
+		readfile($fullpath);
 		return ((connection_status()==0) and !connection_aborted());
 		}
 
 	static function stream($filename)
 		{
 		$fullpath = Video::fullpath('stream', $filename);
-		file_put_contents('/tmp/fp', $fullpath);
 		if($fullpath === false) { return false; }
 		if(connection_status() != 0) { return false; }
 		header('Content-Type: video/quicktime');
-		$fp = fopen($fullpath, 'rb');
-		fpassthru($fp);
-		fclose($fp);
+		readfile($fullpath);
 		return ((connection_status()==0) and !connection_aborted());
 		}
 	

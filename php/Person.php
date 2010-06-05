@@ -105,33 +105,21 @@ class Person extends SongworkDB
 			}
 		}
 
-	function email_newpass($lang='en', $customfrom=false, $customdomain=false)
+	function email_newpass()
 		{
 		$newpass = $this->set_newpass();
-		$domain = ($customdomain) ? $customdomain : Person::domain();
-		if($customfrom)
-			{
-			$from = $customfrom;
-			}
-		else
-			{  # songwork@songwork.com
-			list($firstbit) = explode('.', $domain);
-			$from = $firstbit . '@' . $domain;
-			}
-		$BODYBIT = array();
-		$BODYBIT['en'] = 'Please click this link to make a new password';
-		$SUBJECTS = array();
-		$SUBJECTS['en'] = 'password reset link';
-		$link = 'http://' . $domain . '/reset/' . $newpass;
-		$subject = $domain . ' - ' . $SUBJECTS[$lang];
-		$body = $BODYBIT[$lang] . "\n" . $link;
+		$from = 'songwork@songwork.com';
+		$subject = 'songwork.com - password reset link';
+		$body = "Please click this link to make a new password\n\n";
+		$body .= 'http://songwork.com/reset/' . $newpass;
+		$body .= "\n\nThanks and sorry for the trouble!";
 		$body .= "\n\n--\n";
-		$body .= ucwords($domain) . ' - http://' . $domain . ' - ' . $from;
-		$headers = "From: $domain <$from>\n";
+		$body .= 'Songwork - http://songwork.com - ' . $from;
+		$headers = "From: Songwork <$from>\n";
 		$headers .= "Reply-To: $from\n";
 		$headers .= "Return-Path: $from\n";
 		$headers .= "Sender: $from\n";
-		$headers .= 'Message-Id: <' . date('Ymdhi') . '.' . $this->id . '@' . $domain . '>';
+		$headers .= 'Message-Id: <' . date('Ymdhi') . '.' . $this->id . '@songwork.com>';
 		return mail($this->me['email'], $subject, $body, $headers);
 		}
 
