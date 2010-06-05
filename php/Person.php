@@ -13,13 +13,21 @@ class Person extends SongworkDB
 
 	function set($array)
 		{
-		$array['hashpass'] = $array['password'];
+		if(isset($array['password']))
+			{
+			$array['hashpass'] = $array['password'];
+			unset($array['password']);
+			}
 		parent::set($array);
 		}
 
 	function add($array)
 		{
-		$array['hashpass'] = $array['password'];
+		if(isset($array['password']))
+			{
+			$array['hashpass'] = $array['password'];
+			unset($array['password']);
+			}
 		parent::set($array);
 		}
 
